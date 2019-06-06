@@ -25,7 +25,7 @@ encoded_dim = 512  #compress rate=1/4->dim.=512, compress rate=1/16->dim.=128, c
 
 def residual_network(x, residual_num, encoded_dim):
     
-    def weight_variable(shape, scale=0.1):
+    def w_init(shape, scale=0.1):
         # first half of the weight is the real part and the second part is the imaginary part
         # original input shape [batch_size, height, width, depth]
         # new input shape [part, batch_size, height, width, depth] where part is used to distinguish real and imaginary part
@@ -37,26 +37,26 @@ def residual_network(x, residual_num, encoded_dim):
         out_real = tf.multiply(magnitude, tf.cos(phase))
         out_imag = tf.multiply(magnitude, tf.sin(phase))
   
-        initial = tf.stack([out_real, out_imag])
-        return initial
+        return out_real, out_imag
     
     def complex_conv(x, out_channel, filter_size, stride=1,name="conv"):
         with tf.variable_scope(name):
             # number of channel in the input x
-            in_channel = x.get_shape().as_list()[-1] #get_shape returns a tuple and needed to be converted to a list
+            in_channel = x.get_shape().as_list()[1]//2 #get_shape returns a tuple and needed to be converted to a list
             # shape of the weight and bias
             shape = [filter_size, filter_size, in_channel, out_channel]
             # create weight variable
             sigma = 1/np.sqrt(filter_size**2*(in_channel+out_channel))
-            initial = weight_variable(shape, scale=sigma)
-            w = tf.get_variable('w', initializer = initial)
+            w_real,w_imag = weight_variable(shape, scale=sigma)
+            wr = tf.get_variable('w_real', initializer = w_real)
+            wi = tf.get_variable('w_imag', initializer = w_imag)
             # create bias variable
             b = tf.get_variable('biases', [out_channel], initializer=tf.constant_initializer(0.0))
   
             strides = [1, stride, stride, 1]
   
-            output_real = tf.nn.conv2d(x[0,:], w[0,:], strides, "SAME") - tf.nn.conv2d(x[1,:], w[1,:], strides, "SAME")
-            output_imag = tf.nn.conv2d(x[0,:], w[1,:], strides, "SAME") + tf.nn.conv2d(x[1,:], w[0,:], strides, "SAME")
+            output_real = tf.nn.conv2d(x[:,0:in_channel,:,:], wr, strides, "SAME") - tf.nn.conv2d(x[:,in_channel:,:,:], wi, strides, "SAME")
+            output_imag = tf.nn.conv2d(x[:,0:in_channel,:,:], wi, strides, "SAME") + tf.nn.conv2d(x[:,in_channel:,:,:], wr, strides, "SAME")
             conv = tf.stack([output_real, output_imag])
   
         return tf.nn.bias_add(conv,b)
@@ -64,27 +64,29 @@ def residual_network(x, residual_num, encoded_dim):
     
     def com_full_layer(x, neurons,name="dense"):
         with tf.variable_scope(name):
+            in_channel = x.get_shape()[1]//2
         
             sigma = 1/np.sqrt(np.prod(x.get_shape().as_list()[2:]))
-            initial = weight_variable([x.get_shape().as_list()[2],neurons], scale=sigma)
-            w = tf.get_variable('w', initializer = initial)
+            w_real, w_imag = weight_variable([x.get_shape().as_list()[2],neurons], scale=sigma)
+            wr = tf.get_variable('w_real', initializer = w_real)
+            wi = tf.get_variable('w_imag', initializer = w_imag)
             b = tf.get_variable('b', [2,x.get_shape().as_list()[1],neurons],initializer=tf.constant_initializer(0.))
   
-            out_real = tf.matmul(x[0,:],w[0,:]) - tf.matmul(x[1,:],w[1,:])
-            out_imag = tf.matmul(x[0,:],w[1,:]) + tf.matmul(x[1,:],w[0,:])
+            out_real = tf.matmul(x[:,0:in_channel,:,:],wr) - tf.matmul(x[:,in_channel:,:,:],wi)
+            out_imag = tf.matmul(x[:,0:in_channel,:,:],wr) + tf.matmul(x[:,in_channel:,:,:],wi)
   
         return tf.stack([out_real, out_imag])+b
     
     def complex_BN(x,name='BN'):
         with tf.variable_scope(name):
-            half_channel = x.get_shape()[0]
+            half_channel = x.get_shape()[1]
             
             gamma_rr = tf.get_variable(name='gamma_rr',initializer=tf.convert_to_tensor(1/np.sqrt(2)))
             gamma_ii = tf.get_variable(name='gamma_rr',initializer=tf.convert_to_tensor(1/np.sqrt(2)))
             gamma_ri = tf.get_variable(name='gamma_rr',initializer=tf.convert_to_tensor(0))
             
-            x_real = gamma_rr*x[0:half_channel,:]+gamma_ri*x[half_channel:,:]
-            x_imag = gamma_ri*x[0:half_channel,:]+gamma_ii*x[half_channel:,:]
+            x_real = gamma_rr*x[:,0:half_channel,:]+gamma_ri*x[:,half_channel:,:]
+            x_imag = gamma_ri*x[:,0:half_channel,:]+gamma_ii*x[:,half_channel:,:]
             com_x = tf.concat([x_real,x_imag],axis=0)
             b = tf.get_variable('bias',shape=com_x.get_shape(),initializer=tf.constant_initializer(0.))
             return com_x+b
