@@ -39,7 +39,7 @@ def residual_network(x, residual_num, encoded_dim):
   
         return out_real, out_imag
     
-    def complex_conv(x, out_channel, filter_size, stride=1,name="conv"):
+    def complex_conv(xr, xi, out_channel, filter_size, stride=1,name="conv"):
         with tf.variable_scope(name):
             # number of channel in the input x
             in_channel = x.get_shape().as_list()[1]//2 #get_shape returns a tuple and needed to be converted to a list
@@ -51,33 +51,42 @@ def residual_network(x, residual_num, encoded_dim):
             wr = tf.get_variable('w_real', initializer = w_real)
             wi = tf.get_variable('w_imag', initializer = w_imag)
             # create bias variable
-            b = tf.get_variable('biases', [out_channel], initializer=tf.constant_initializer(0.0))
+            
   
             strides = [1, stride, stride, 1]
   
-            output_real = tf.nn.conv2d(x[:,0:in_channel,:,:], wr, strides, "SAME") - tf.nn.conv2d(x[:,in_channel:,:,:], wi, strides, "SAME")
-            output_imag = tf.nn.conv2d(x[:,0:in_channel,:,:], wi, strides, "SAME") + tf.nn.conv2d(x[:,in_channel:,:,:], wr, strides, "SAME")
-            conv = tf.stack([output_real, output_imag])
+            output_real = tf.nn.conv2d(xr, wr, strides, "SAME") - tf.nn.conv2d(xi, wi, strides, "SAME")
+            output_imag = tf.nn.conv2d(xr, wi, strides, "SAME") + tf.nn.conv2d(xi, wr, strides, "SAME")
+            
+            b_real = tf.get_variable('biases_real', output_real.get_shape().as_list(), initializer=tf.constant_initializer(0.0))
+            b_imag = tf.get_variable('biases_imag', output_real.get_shape().as_list(), initializer=tf.constant_initializer(0.0))
+            
+            conv_real = output_real + b_real
+            conv_imag = output_imag + b_imag
   
-        return tf.nn.bias_add(conv,b)
+        return conv_real, conv_imag
     
     
-    def com_full_layer(x, neurons,name="dense"):
-        with tf.variable_scope(name):
-            in_channel = x.get_shape()[1]//2
-        
+    def com_full_layer(xr, xi, neurons,name="dense"):
+        with tf.variable_scope(name):        
             sigma = 1/np.sqrt(np.prod(x.get_shape().as_list()[2:]))
-            w_real, w_imag = weight_variable([x.get_shape().as_list()[2],neurons], scale=sigma)
+            w_real, w_imag = weight_variable([xr.get_shape().as_list()[1],neurons], scale=sigma)
             wr = tf.get_variable('w_real', initializer = w_real)
             wi = tf.get_variable('w_imag', initializer = w_imag)
-            b = tf.get_variable('b', [2,x.get_shape().as_list()[1],neurons],initializer=tf.constant_initializer(0.))
+            
+            out_real = tf.matmul(xr,wr) - tf.matmul(xi,wi)
+            out_imag = tf.matmul(xi,wr) + tf.matmul(xr,wi)
+            
+            b_real = tf.get_variable('b_real', [xr.get_shape().as_list()[0],neurons],initializer=tf.constant_initializer(0.))
+            b_imag = tf.get_variable('b_imag', [xr.get_shape().as_list()[0],neurons],initializer=tf.constant_initializer(0.))
+            
+            full_real = out_real + b_real
+            full_imag = out_imag + b_imag
   
-            out_real = tf.matmul(x[:,0:in_channel,:,:],wr) - tf.matmul(x[:,in_channel:,:,:],wi)
-            out_imag = tf.matmul(x[:,0:in_channel,:,:],wr) + tf.matmul(x[:,in_channel:,:,:],wi)
   
-        return tf.stack([out_real, out_imag])+b
+        return full_real, full_imag
     
-    def complex_BN(x,name='BN'):
+    def complex_BN(xr, xi, name='BN'):
         with tf.variable_scope(name):
             half_channel = x.get_shape()[1]
             
@@ -85,26 +94,34 @@ def residual_network(x, residual_num, encoded_dim):
             gamma_ii = tf.get_variable(name='gamma_rr',initializer=tf.convert_to_tensor(1/np.sqrt(2)))
             gamma_ri = tf.get_variable(name='gamma_rr',initializer=tf.convert_to_tensor(0))
             
-            x_real = gamma_rr*x[:,0:half_channel,:]+gamma_ri*x[:,half_channel:,:]
-            x_imag = gamma_ri*x[:,0:half_channel,:]+gamma_ii*x[:,half_channel:,:]
-            com_x = tf.concat([x_real,x_imag],axis=0)
-            b = tf.get_variable('bias',shape=com_x.get_shape(),initializer=tf.constant_initializer(0.))
-            return com_x+b
+            x_real = gamma_rr*xr+gamma_ri*xi
+            x_imag = gamma_ri*xr+gamma_ii*xi
+            
+            b_real = tf.get_variable('bias',shape=x_real.get_shape(),initializer=tf.constant_initializer(0.))
+            b_imag = tf.get_variable('bias',shape=x_real.get_shape(),initializer=tf.constant_initializer(0.))
+            
+            out_real = x_real + b_real
+            out_imag = x_imag + b_imag
+            return out_real, out_imag
     
-    def add_common_layers(y,name='common_layer'):
-        y = complex_BN(y,name)
-        y = LeakyReLU()(y)
-        return y
+    def add_common_layers(yr, yi, name='common_layer'):
+        yr,yi = complex_BN(yr, yi, name)
+        yr = LeakyReLU()(yr)
+        yi = LeakyReLU()(yi)
+        return yr, yi
     def residual_block_decoded(y):
         shortcut = y
-        y = Conv2D(8, kernel_size=(3, 3), padding='same', data_format='channels_first')(y)
-        y = add_common_layers(y,'l_1')
+        yr = y[:,0,:,:]
+        yi = y[:,1,:,:]
+        yr, yi = complex_conv(yr, yi, 4, 3)
+        yr, yi = add_common_layers(yr, yi, 'l_1')
         
-        y = Conv2D(16, kernel_size=(3, 3), padding='same', data_format='channels_first')(y)
-        y = add_common_layers(y,'l_2')
+        yr, yi = complex_conv(yr, yi, 8, 3)
+        yr, yi = add_common_layers(yr, yi,'l_2')
         
-        y = Conv2D(2, kernel_size=(3, 3), padding='same', data_format='channels_first')(y)
-        y = complex_BN(y)
+        yr, yi = complex_conv(yr, yi, 1, 3)
+        yr, yi = complex_BN(yr, yi)
+        y = tf.stack([yr,yi], axis=1)
 
         y = add([shortcut, y])
         y = LeakyReLU()(y)
@@ -112,20 +129,26 @@ def residual_network(x, residual_num, encoded_dim):
         return y
     
     #x = Conv2D(2, (3, 3), padding='same', data_format="channels_first")(x)
-    x = complex_conv(x, 2, 3)
-    x = add_common_layers(x,'l_in')
+    x_real = x[:,0,:,:]
+    x_imag = x[:,1,:,:]
+    x_real, x_imag = complex_conv(x_real, x_imag, 1, 3)
+    xr, xi = add_common_layers(x_real, x_imag,'l_in')
     
     
-    x = Reshape((img_total,))(x)
-    encoded = Dense(encoded_dim, activation='linear')(x)
+    xr = Reshape((img_total//2,))(xr)
+    xi = Reshape((img_total//2,))(xi)
+    encoded_real, encoded_imag = com_full_layer(xr,xi, encoded_dim)
     
-    x = Dense(img_total, activation='linear')(encoded)
-    x = Reshape((img_channels, img_height, img_width,))(x)
+    xr, xi = com_full_layer(enoded_real, encoded_imag, img_total//2)
+    xr = Reshape((img_channels//2, img_height, img_width,))(xr)
+    xi = Reshape((img_channels//2, img_height, img_width,))(xi)
     for i in range(residual_num):
         x = residual_block_decoded(x)
     
-    x = Conv2D(2, (3, 3), activation='sigmoid', padding='same', data_format="channels_first")(x)
-
+    xr,xi = complex_conv(x[:,0,:,:],x[:,1,:,:],1,3)
+    xr = tf.sigmoid(xr)
+    xi = tf.sigmoid(xi)
+    x = tf.stack([xr,xi],axis=1)
     return x
 
 image_tensor = Input(shape=(img_channels, img_height, img_width))
