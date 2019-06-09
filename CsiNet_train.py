@@ -108,13 +108,13 @@ def residual_network(x, residual_num, encoded_dim):
             shortcut = y
             yr = tf.expand_dims(y[:,0,:,:],1)
             yi = tf.expand_dims(y[:,1,:,:],1)
-            yr, yi = complex_conv(yr, yi, 4, 3)
+            yr, yi = complex_conv(yr, yi, 4, 3,'conv_1')
             yr, yi = add_common_layers(yr, yi, 'l_1')
         
-            yr, yi = complex_conv(yr, yi, 8, 3)
+            yr, yi = complex_conv(yr, yi, 8, 3,'conv_2')
             yr, yi = add_common_layers(yr, yi,'l_2')
         
-            yr, yi = complex_conv(yr, yi, 1, 3)
+            yr, yi = complex_conv(yr, yi, 1, 3,'conv_3')
             yr, yi = complex_BN(yr, yi)
             y = tf.stack([yr,yi], axis=1)
 
