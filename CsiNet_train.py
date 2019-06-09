@@ -139,6 +139,7 @@ def residual_network(x, residual_num, encoded_dim):
     xi = Reshape((img_channels//2, img_height, img_width,))(xi)
 
     x = residual_block_decoded(x,name='first_decoder')
+    print(x.get_shape())
     x = residual_block_decoded(x,name='second_decoder')
     
     xr,xi = complex_conv(x[:,0,:,:],x[:,1,:,:],1,3)
