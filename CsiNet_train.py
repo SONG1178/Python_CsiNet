@@ -1,5 +1,6 @@
 import tensorflow as tf
 import tensorflow_probability as tfp
+from tensorflow.keras.layers import Lambda;
 from tensorflow.keras.layers import Input, Dense, BatchNormalization, Reshape, Conv2D, add, LeakyReLU
 from tensorflow.keras.models import Model
 from tensorflow.keras.callbacks import TensorBoard, Callback
@@ -145,9 +146,13 @@ def residual_network(x, residual_num, encoded_dim):
     xr = tf.expand_dims(x[:,0,:,:],1)
     xi = tf.expand_dims(x[:,1,:,:],1)
     xr,xi = complex_conv(xr,xi,1,3,name='output')
-    xr = tf.sigmoid(xr)
-    xi = tf.sigmoid(xi)
-    x = tf.concat([xr,xi],axis=1)
+    
+    def activation(xr,xi):
+        xr = tf.sigmoid(xr)
+        xi = tf.sigmoid(xi)
+        x = tf.concat([xr,xi],axis=1)
+        return x
+    x = Lamda(activation)(xr,xi)
     return x
 
 image_tensor = Input(shape=(img_channels, img_height, img_width))
