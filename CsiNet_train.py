@@ -106,8 +106,8 @@ def residual_network(x, residual_num, encoded_dim):
     def residual_block_decoded(y,name='residual_block'):
         with tf.variable_scope(name):
             shortcut = y
-            yr = y[:,0,:,:]
-            yi = y[:,1,:,:]
+            yr = tf.expand_dims(y[:,0,:,:],1)
+            yi = tf.expand_dims(y[:,1,:,:],1)
             yr, yi = complex_conv(yr, yi, 4, 3)
             yr, yi = add_common_layers(yr, yi, 'l_1')
         
