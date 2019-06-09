@@ -147,12 +147,10 @@ def residual_network(x, residual_num, encoded_dim):
     xi = tf.expand_dims(x[:,1,:,:],1)
     xr,xi = complex_conv(xr,xi,1,3,name='output')
     
-    def final(xr,xi):
-        xr = tf.sigmoid(xr)
-        xi = tf.sigmoid(xi)
-        x = tf.concat([xr,xi],axis=1)
-        return x
-    x = Lambda(final)(xr,xi)
+    xr = tf.sigmoid(xr)
+    xi = tf.sigmoid(xi)
+    x = tf.concat([xr,xi],axis=1)
+
     return x
 
 image_tensor = Input(shape=(img_channels, img_height, img_width))
