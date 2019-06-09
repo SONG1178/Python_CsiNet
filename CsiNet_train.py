@@ -101,7 +101,7 @@ def residual_network(x, residual_num, encoded_dim):
             return tf.nn.bias_add(x_real,b_real), tf.nn.bias_add(x_imag,b_imag)
     
     def add_common_layers(yr, yi, name='common_layer'):
-        yr,yi = Lambda(complex_BN,arguments={'xr='yr, 'yr'=yi, 'name'=name})
+        yr,yi = Lambda(complex_BN,arguments={'xr'=yr,'yr'=yi, 'name'=name})
         yr = LeakyReLU()(yr)
         yi = LeakyReLU()(yi)
         return yr, yi
