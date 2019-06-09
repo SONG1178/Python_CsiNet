@@ -134,7 +134,7 @@ def residual_network(x, residual_num, encoded_dim):
     xi = Reshape((img_total//2,))(xi)
     encoded_real, encoded_imag = com_full_layer(xr,xi, encoded_dim)
     
-    xr, xi = com_full_layer(enoded_real, encoded_imag, img_total//2)
+    xr, xi = com_full_layer(encoded_real, encoded_imag, img_total//2)
     xr = Reshape((img_channels//2, img_height, img_width,))(xr)
     xi = Reshape((img_channels//2, img_height, img_width,))(xi)
 
