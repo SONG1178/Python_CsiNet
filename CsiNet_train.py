@@ -42,7 +42,7 @@ def residual_network(x, residual_num, encoded_dim):
     def complex_conv(xr, xi, out_channel, filter_size, stride=1,name="conv"):
         with tf.variable_scope(name):
             # number of channel in the input x
-            in_channel = x.get_shape().as_list()[1]//2 #get_shape returns a tuple and needed to be converted to a list
+            in_channel = xr.get_shape().as_list()[1] #get_shape returns a tuple and needed to be converted to a list
             # shape of the weight and bias
             shape = [filter_size, filter_size, in_channel, out_channel]
             # create weight variable
