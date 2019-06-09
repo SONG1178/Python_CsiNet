@@ -142,7 +142,9 @@ def residual_network(x, residual_num, encoded_dim):
     x = residual_block_decoded(x,name='first_decoder')
     x = residual_block_decoded(x,name='second_decoder')
     
-    xr,xi = complex_conv(x[:,0,:,:],x[:,1,:,:],1,3,name='output')
+    xr = tf.expand_dims(x[:,0,:,:],1)
+    xi = tf.expand_dims(x[:,1,:,:],1)
+    xr,xi = complex_conv(xr,xi,1,3,name='output')
     xr = tf.sigmoid(xr)
     xi = tf.sigmoid(xi)
     x = tf.stack([xr,xi],axis=1)
