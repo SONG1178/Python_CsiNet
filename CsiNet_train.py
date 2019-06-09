@@ -151,7 +151,7 @@ def residual_network(x, residual_num, encoded_dim):
         real = tf.sigmoid(real)
         imag = tf.sigmoid(imag)
         return tf.concat([real,imag],axis=1)
-    x = Lambda(final)((xr,xi))
+    x = Lambda(final,arguments={'imag':xi})(xr)
     
 
     return x
