@@ -5,7 +5,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.callbacks import TensorBoard, Callback
 import scipy.io as sio 
 import numpy as np
-import math
+import math as m
 import time
 tf.reset_default_graph()
 
