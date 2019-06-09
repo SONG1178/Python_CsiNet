@@ -58,8 +58,8 @@ def residual_network(x, residual_num, encoded_dim):
             output_real = tf.nn.conv2d(xr, wr, strides, "SAME", data_format='NCHW') - tf.nn.conv2d(xi, wi, strides, "SAME", data_format='NCHW')
             output_imag = tf.nn.conv2d(xr, wi, strides, "SAME", data_format='NCHW') + tf.nn.conv2d(xi, wr, strides, "SAME", data_format='NCHW')
             
-            b_real = tf.get_variable('biases_real', output_real.get_shape().as_list(), initializer=tf.constant_initializer(0.0))
-            b_imag = tf.get_variable('biases_imag', output_real.get_shape().as_list(), initializer=tf.constant_initializer(0.0))
+            b_real = tf.get_variable('biases_real', shape=output_real.get_shape().as_list(), initializer=tf.constant_initializer(0.0))
+            b_imag = tf.get_variable('biases_imag', shape=output_real.get_shape().as_list(), initializer=tf.constant_initializer(0.0))
             
             conv_real = output_real + b_real
             conv_imag = output_imag + b_imag
