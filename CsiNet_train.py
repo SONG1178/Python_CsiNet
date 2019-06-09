@@ -129,8 +129,8 @@ def residual_network(x, residual_num, encoded_dim):
         return y
     
     #x = Conv2D(2, (3, 3), padding='same', data_format="channels_first")(x)
-    x_real = x[:,0,:,:]
-    x_imag = x[:,1,:,:]
+    x_real = tf.expand_dims(x[:,0,:,:],1)
+    x_imag = tf.expand_dims(x[:,1,:,:],1)
     x_real, x_imag = complex_conv(x_real, x_imag, 1, 3)
     xr, xi = add_common_layers(x_real, x_imag,'l_in')
     
