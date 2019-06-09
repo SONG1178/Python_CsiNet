@@ -152,7 +152,7 @@ def residual_network(x, residual_num, encoded_dim):
         xi = tf.sigmoid(xi)
         x = tf.concat([xr,xi],axis=1)
         return x
-    x = Lamda(activation)(xr,xi)
+    x = Lambda(activation)(xr,xi)
     return x
 
 image_tensor = Input(shape=(img_channels, img_height, img_width))
