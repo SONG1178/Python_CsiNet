@@ -107,20 +107,17 @@ def residual_network(x, residual_num, encoded_dim):
         with tf.variable_scope(name):
             shortcut = y
             yr = tf.expand_dims(y[:,0,:,:],1)
-            print(yr.get_shape())
             yi = tf.expand_dims(y[:,1,:,:],1)
+            
             yr, yi = complex_conv(yr, yi, 4, 3,name='conv_1')
             yr, yi = add_common_layers(yr, yi, 'l_1')
-            print(yr.get_shape())
         
             yr, yi = complex_conv(yr, yi, 8, 3,name='conv_2')
             yr, yi = add_common_layers(yr, yi,'l_2')
-            print(yr.get_shape())
         
             yr, yi = complex_conv(yr, yi, 1, 3,name='conv_3')
             yr, yi = complex_BN(yr, yi)
-            print(yr.get_shape())
-            y = tf.stack([yr,yi], axis=1)
+            y = tf.concat([yr,yi], axis=1)
 
             y = add([shortcut, y])
             y = LeakyReLU()(y)
