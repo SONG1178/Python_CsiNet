@@ -75,14 +75,11 @@ def residual_network(x, residual_num, encoded_dim):
             out_real = tf.matmul(xr,wr) - tf.matmul(xi,wi)
             out_imag = tf.matmul(xi,wr) + tf.matmul(xr,wi)
             
-            b_real = tf.get_variable('b_real', [xr.get_shape().as_list()[0],neurons],initializer=tf.constant_initializer(0.0))
-            b_imag = tf.get_variable('b_imag', [xr.get_shape().as_list()[0],neurons],initializer=tf.constant_initializer(0.0))
+            b_real = tf.get_variable('b_real', [neurons],initializer=tf.constant_initializer(0.0))
+            b_imag = tf.get_variable('b_imag', [neurons],initializer=tf.constant_initializer(0.0))
             
-            full_real = out_real + b_real
-            full_imag = out_imag + b_imag
   
-  
-        return full_real, full_imag
+        return tf.nn.bias_add(out_real,b_real), tf.nn.bias_add(out_real,b_real)
     
     def complex_BN(xr, xi, name='BN'):
         with tf.variable_scope(name):
@@ -95,12 +92,11 @@ def residual_network(x, residual_num, encoded_dim):
             x_real = gamma_rr*xr+gamma_ri*xi
             x_imag = gamma_ri*xr+gamma_ii*xi
             
-            b_real = tf.get_variable('bias',shape=x_real.get_shape(),initializer=tf.constant_initializer(0.))
-            b_imag = tf.get_variable('bias',shape=x_real.get_shape(),initializer=tf.constant_initializer(0.))
+            dimension = x_real.get_shape().as_list()[-1]
+            b_real = tf.get_variable('bias',[dimension],initializer=tf.constant_initializer(0.0))
+            b_imag = tf.get_variable('bias',[dimension],initializer=tf.constant_initializer(0.0))
             
-            out_real = x_real + b_real
-            out_imag = x_imag + b_imag
-            return out_real, out_imag
+            return tf.nn.bias_add(x_real,b_real), tf.nn.bias_add(x_imag,b_imag)
     
     def add_common_layers(yr, yi, name='common_layer'):
         yr,yi = complex_BN(yr, yi, name)
