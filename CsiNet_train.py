@@ -1,8 +1,8 @@
 import tensorflow as tf
 import tensorflow_probability as tfp
-from tf.keras.layers import Input, Dense, BatchNormalization, Reshape, Conv2D, add, LeakyReLU
-from tf.keras.models import Model
-from tf.keras.callbacks import TensorBoard, Callback
+from tensorflow.keras.layers import Input, Dense, BatchNormalization, Reshape, Conv2D, add, LeakyReLU
+from tensorflow.keras.models import Model
+from tensorflow.keras.callbacks import TensorBoard, Callback
 import scipy.io as sio 
 import numpy as np
 import math
