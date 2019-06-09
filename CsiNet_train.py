@@ -60,12 +60,9 @@ def residual_network(x, residual_num, encoded_dim):
             
             dimension = output_real.get_shape().as_list()[-1]
             b_real = tf.get_variable('biases_real', [dimension], initializer=tf.constant_initializer(0.0))
-            b_imag = tf.get_variable('biases_imag', shape=output_real.get_shape().as_list(), initializer=tf.constant_initializer(0.0))
-            
-            conv_real = output_real + b_real
-            conv_imag = output_imag + b_imag
+            b_imag = tf.get_variable('biases_imag', [dimension], initializer=tf.constant_initializer(0.0))
   
-        return tf.nn.bias_add(output_real,b_real), conv_imag
+        return tf.nn.bias_add(output_real,b_real), tf.nn.bias_add(output_imag,b_imag)
     
     
     def com_full_layer(xr, xi, neurons,name="dense"):
