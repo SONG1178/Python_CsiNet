@@ -93,8 +93,8 @@ def residual_network(x, residual_num, encoded_dim):
             x_imag = gamma_ri*xr+gamma_ii*xi
             
             dimension = x_real.get_shape().as_list()[-1]
-            b_real = tf.get_variable('bias',[dimension],initializer=tf.constant_initializer(0.0))
-            b_imag = tf.get_variable('bias',[dimension],initializer=tf.constant_initializer(0.0))
+            b_real = tf.get_variable('bias_real',[dimension],initializer=tf.constant_initializer(0.0))
+            b_imag = tf.get_variable('bias_imag',[dimension],initializer=tf.constant_initializer(0.0))
             
             return tf.nn.bias_add(x_real,b_real), tf.nn.bias_add(x_imag,b_imag)
     
@@ -103,22 +103,23 @@ def residual_network(x, residual_num, encoded_dim):
         yr = LeakyReLU()(yr)
         yi = LeakyReLU()(yi)
         return yr, yi
-    def residual_block_decoded(y):
-        shortcut = y
-        yr = y[:,0,:,:]
-        yi = y[:,1,:,:]
-        yr, yi = complex_conv(yr, yi, 4, 3)
-        yr, yi = add_common_layers(yr, yi, 'l_1')
+    def residual_block_decoded(y,name='residual_block'):
+        with tf.variable_scope(name):
+            shortcut = y
+            yr = y[:,0,:,:]
+            yi = y[:,1,:,:]
+            yr, yi = complex_conv(yr, yi, 4, 3)
+            yr, yi = add_common_layers(yr, yi, 'l_1')
         
-        yr, yi = complex_conv(yr, yi, 8, 3)
-        yr, yi = add_common_layers(yr, yi,'l_2')
+            yr, yi = complex_conv(yr, yi, 8, 3)
+            yr, yi = add_common_layers(yr, yi,'l_2')
         
-        yr, yi = complex_conv(yr, yi, 1, 3)
-        yr, yi = complex_BN(yr, yi)
-        y = tf.stack([yr,yi], axis=1)
+            yr, yi = complex_conv(yr, yi, 1, 3)
+            yr, yi = complex_BN(yr, yi)
+            y = tf.stack([yr,yi], axis=1)
 
-        y = add([shortcut, y])
-        y = LeakyReLU()(y)
+            y = add([shortcut, y])
+            y = LeakyReLU()(y)
 
         return y
     
@@ -136,8 +137,9 @@ def residual_network(x, residual_num, encoded_dim):
     xr, xi = com_full_layer(enoded_real, encoded_imag, img_total//2)
     xr = Reshape((img_channels//2, img_height, img_width,))(xr)
     xi = Reshape((img_channels//2, img_height, img_width,))(xi)
-    for i in range(residual_num):
-        x = residual_block_decoded(x)
+
+    x = residual_block_decoded(x,name='first_decoder')
+    x = residual_block_decoded(x,name='second_decoder')
     
     xr,xi = complex_conv(x[:,0,:,:],x[:,1,:,:],1,3)
     xr = tf.sigmoid(xr)
