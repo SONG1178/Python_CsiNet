@@ -147,9 +147,11 @@ def residual_network(x, residual_num, encoded_dim):
     xi = tf.expand_dims(x[:,1,:,:],1)
     xr,xi = complex_conv(xr,xi,1,3,name='output')
     
-    xr = tf.sigmoid(xr)
-    xi = tf.sigmoid(xi)
-    x = tf.concat([xr,xi],axis=1)
+    def final(real,imag):
+        real = tf.sigmoid(real)
+        imag = tf.sigmoid(imag)
+        return tf.concat([real,imag],axis=1)
+    x = Lambda(final,arguments=xr,xi)
 
     return x
 
