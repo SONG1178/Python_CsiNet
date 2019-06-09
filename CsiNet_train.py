@@ -77,8 +77,8 @@ def residual_network(x, residual_num, encoded_dim):
             out_real = tf.matmul(xr,wr) - tf.matmul(xi,wi)
             out_imag = tf.matmul(xi,wr) + tf.matmul(xr,wi)
             
-            b_real = tf.get_variable('b_real', [xr.get_shape().as_list()[0],neurons],initializer=tf.constant_initializer(0.))
-            b_imag = tf.get_variable('b_imag', [xr.get_shape().as_list()[0],neurons],initializer=tf.constant_initializer(0.))
+            b_real = tf.get_variable('b_real', [xr.get_shape().as_list()[0],neurons],initializer=tf.constant_initializer(0.0))
+            b_imag = tf.get_variable('b_imag', [xr.get_shape().as_list()[0],neurons],initializer=tf.constant_initializer(0.0))
             
             full_real = out_real + b_real
             full_imag = out_imag + b_imag
