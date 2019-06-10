@@ -4,7 +4,7 @@ from tensorflow.python.keras.layers import Lambda
 from tensorflow.keras.layers import Input, Dense, BatchNormalization, Reshape, Conv2D, add, LeakyReLU,multiply, dot, subtract
 from tensorflow.keras.activations import sigmoid
 from tensorflow.keras.models import Model
-from tensorflow.keras.backend import variable,zeros
+from tensorflow.keras.backend import variable,zeros,bias_add
 from tensorflow.keras.initializers import RandomNormal
 from tensorflow.keras.callbacks import TensorBoard, Callback
 import scipy.io as sio 
@@ -86,7 +86,7 @@ def residual_network(x, residual_num, encoded_dim):
             b_imag = zeros(out_real.get_shape())
             
   
-        return add([out_real,b_real]), add([out_imag,b_imag])
+        return bias_add(out_real,bias=0.0,data_format='channels_first'), bias_add(out_imag,bias=0.0,data_format='channels_first')
     
     def complex_BN(xr, xi, name='BN'):
         with tf.variable_scope(name):
