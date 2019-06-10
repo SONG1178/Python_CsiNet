@@ -36,8 +36,8 @@ def residual_network(x, residual_num, encoded_dim):
         magnitude =np.random.rayleigh(scale=scale, size=shape)
         phase = np.random.uniform(low=-pi, high=pi, size=shape)
         #initial is the initial weights, part=0 refers to the real part, part=1 refers to the imaginary part   
-        out_real = np.multiply(magnitude, np.cos(phase))
-        out_imag = np.multiply(magnitude, np.sin(phase))
+        out_real = np.multiply(magnitude, tf.cos(phase))
+        out_imag = np.multiply(magnitude, tf.sin(phase))
         w_real = variable(value=out_real)
         w_imag = variable(value=out_imag)
   
@@ -46,11 +46,11 @@ def residual_network(x, residual_num, encoded_dim):
     def complex_conv(xr, xi, out_channel, filter_size, stride=1,name="conv"):
         with tf.variable_scope(name):
             # number of channel in the input x
-            in_channel = xr.get_shape()[1] #get_shape returns a tuple and needed to be converted to a list
+            in_channel = xr.get_shape().as_list()[1] #get_shape returns a tuple and needed to be converted to a list
             # shape of the weight and bias
             shape = [filter_size, filter_size, in_channel, out_channel]
             # create weight variable
-            sigma = 1/m.sqrt(filter_size**2*(xr.get_shape().as_list()[1]+out_channel))
+            sigma = 1/m.sqrt(filter_size**2*(in_cahnnel+out_channel))
             w_real,w_imag = w_init(shape, scale=sigma)
             #wr = tf.get_variable('w_real', initializer = w_real)
             #wi = tf.get_variable('w_imag', initializer = w_imag)
