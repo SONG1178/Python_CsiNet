@@ -48,7 +48,7 @@ def residual_network(x, residual_num, encoded_dim):
             # number of channel in the input x
             in_channel = xr.get_shape().as_list()[1] #get_shape returns a tuple and needed to be converted to a list
             # shape of the weight and bias
-            shape = [filter_size, filter_size, in_channel, out_channel]
+            shape = (filter_size, filter_size, in_channel, out_channel)
             # create weight variable
             sigma = 1/m.sqrt(filter_size**2*(in_channel+out_channel))
             w_real,w_imag = w_init(shape, scale=sigma)
