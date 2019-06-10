@@ -82,6 +82,7 @@ def residual_network(x, residual_num, encoded_dim):
             out_real = subtract([dot(xr,wr),dot(xi,wi)])
             out_imag = add([dot(xr,wi),dot(xi,wr)])
             
+            print(out_real.get_shape())
             (channel,width,height) = out_real.get_shape().as_list()[1:]
             batch_size = 200
             shape = [batch_size,channel,width,height]
