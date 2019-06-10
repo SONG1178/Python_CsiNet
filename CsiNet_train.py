@@ -36,8 +36,8 @@ def residual_network(x, residual_num, encoded_dim):
         magnitude =np.random.rayleigh(scale=scale, size=shape)
         phase = np.random.uniform(low=-pi, high=pi, size=shape)
         #initial is the initial weights, part=0 refers to the real part, part=1 refers to the imaginary part   
-        out_real = np.multiply(magnitude, m.cos(phase))
-        out_imag = np.multiply(magnitude, m.sin(phase))
+        out_real = np.multiply(magnitude, np.cos(phase))
+        out_imag = np.multiply(magnitude, np.sin(phase))
         w_real = variable(value=out_real)
         w_imag = variable(value=out_imag)
   
@@ -48,7 +48,7 @@ def residual_network(x, residual_num, encoded_dim):
             # number of channel in the input x
             in_channel = xr.get_shape().as_list()[1] #get_shape returns a tuple and needed to be converted to a list
             # shape of the weight and bias
-            shape = (filter_size, filter_size, in_channel, out_channel)
+            shape = [filter_size, filter_size, in_channel, out_channel]
             # create weight variable
             sigma = 1/np.sqrt(filter_size**2*(in_channel+out_channel))
             w_real,w_imag = w_init(shape, scale=sigma)
