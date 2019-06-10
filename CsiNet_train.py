@@ -86,7 +86,7 @@ def residual_network(x, residual_num, encoded_dim):
             b_imag = zeros(out_real.get_shape())
             
   
-        return bias_add(out_real,bias=0.0,data_format='channels_first'), bias_add(out_imag,bias=0.0,data_format='channels_first')
+        return add([out_real,b_real]), add([out_imag,b_imag])
     
     def complex_BN(xr, xi, name='BN'):
         with tf.variable_scope(name):
