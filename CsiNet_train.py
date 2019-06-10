@@ -99,11 +99,15 @@ def residual_network(x, residual_num, encoded_dim):
             x_real = add([gamma_rr*xr,gamma_ri*xi])
             x_imag = add([gamma_ri*xr,gamma_ii*xi])
             
-            dimension = x_real.get_shape().as_list()[-1]
-            #b_real = zeros(x_real.get_shape())
-            #b_imag = zeros(x_real.get_shape())
+            channel,width,height = x_real.get_shape()[1:]
+            batch_size = 200
+            shape = [batch_size,channel,width,height]
             
-            return bias_add(x_real,bias=0.0,data_format='channels_first'), bias_add(x_imag,bias=0.0,data_format='channels_first')
+            dimension = x_real.get_shape().as_list()[-1]
+            b_real = zeros(shape)
+            b_imag = zeros(shape)
+            
+            return add([x_real,b_real]), add([x_imag,b_imag])
     
     def add_common_layers(yr, yi, name='common_layer'):
         yr,yi = complex_BN(yr,yi, name)
