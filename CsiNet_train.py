@@ -32,7 +32,7 @@ def residual_network(x, residual_num, encoded_dim):
         # first half of the weight is the real part and the second part is the imaginary part
         # original input shape [batch_size, height, width, depth]
         # new input shape [part, batch_size, height, width, depth] where part is used to distinguish real and imaginary part
-        pi = tf.constant(m.pi)
+        pi = m.pi
         magnitude =np.random.rayleigh(scale=scale, size=shape)
         phase = np.random.uniform(low=-pi, high=pi, size=shape)
         #initial is the initial weights, part=0 refers to the real part, part=1 refers to the imaginary part   
