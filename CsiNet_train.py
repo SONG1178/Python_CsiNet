@@ -93,15 +93,15 @@ def residual_network(x, residual_num, encoded_dim):
             half_channel = x.get_shape()[1]
             
             gamma_rr = variable(value=1/m.sqrt(2))
-            gamma_ii = variable(valuee=1/m.sqrt(2))
+            gamma_ii = variable(value=1/m.sqrt(2))
             gamma_ri = variable(value=0.0)
             
             x_real = add([gamma_rr*xr,gamma_ri*xi])
             x_imag = add([gamma_ri*xr,gamma_ii*xi])
             
             dimension = x_real.get_shape().as_list()[-1]
-            b_real = variable(value=np.zeros(out_real.get_shape()))
-            b_imag = variable(value=np.zeros(out_real.get_shape()))
+            b_real = variable(value=np.zeros(x_real.get_shape()))
+            b_imag = variable(value=np.zeros(x_real.get_shape()))
             
             return add([x_real,b_real]), add([x_imag,b_imag])
     
