@@ -1,9 +1,10 @@
 import tensorflow as tf
 import tensorflow_probability as tfp
-from tensorflow.python.keras.layers import Lambda;
-from tensorflow.keras.layers import Input, Dense, BatchNormalization, Reshape, Conv2D, add, LeakyReLU
+from tensorflow.python.keras.layers import Lambda
+from tensorflow.keras.layers import Input, Dense, BatchNormalization, Reshape, Conv2D, add, LeakyReLU,multiply, dot, subtract
 from tensorflow.keras.activations import sigmoid
 from tensorflow.keras.models import Model
+from tensorflow.keras.backend import variable
 from tensorflow.keras.callbacks import TensorBoard, Callback
 import scipy.io as sio 
 import numpy as np
@@ -33,13 +34,15 @@ def residual_network(x, residual_num, encoded_dim):
         # new input shape [part, batch_size, height, width, depth] where part is used to distinguish real and imaginary part
   
         pi = tf.constant(m.pi)
-        magnitude = tf.convert_to_tensor(tf.cast(tfp.math.random_rayleigh(scale=scale, shape=shape), dtype=tf.float32))
-        phase = tf.random_uniform(tf.convert_to_tensor(shape), minval=-pi, maxval=pi)
+        magnitude =np.random.rayleigh(scale=scale, size=shape)
+        phase = np.random.uniform(tf.convert_to_tensor(low=-pi, high=pi, size=shape)
         #initial is the initial weights, part=0 refers to the real part, part=1 refers to the imaginary part
-        out_real = tf.multiply(magnitude, tf.cos(phase))
-        out_imag = tf.multiply(magnitude, tf.sin(phase))
+        out_real = np.multiply(magnitude, m.cos(phase))
+        out_imag = np.multiply(magnitude, m.sin(phase))
+        w_real = variable(value=out_real)
+        w_imag = variable(value=out_imag)
   
-        return out_real, out_imag
+        return w_real, w_imag
     
     def complex_conv(xr, xi, out_channel, filter_size, stride=1,name="conv"):
         with tf.variable_scope(name):
@@ -50,55 +53,57 @@ def residual_network(x, residual_num, encoded_dim):
             # create weight variable
             sigma = 1/np.sqrt(filter_size**2*(in_channel+out_channel))
             w_real,w_imag = w_init(shape, scale=sigma)
-            wr = tf.get_variable('w_real', initializer = w_real)
-            wi = tf.get_variable('w_imag', initializer = w_imag)
+            #wr = tf.get_variable('w_real', initializer = w_real)
+            #wi = tf.get_variable('w_imag', initializer = w_imag)
             # create bias variable
             
             
-            strides = [1, stride, stride, 1]
   
-            output_real = tf.nn.conv2d(xr, wr, strides, "SAME", data_format='NCHW') - tf.nn.conv2d(xi, wi, strides, "SAME", data_format='NCHW')
-            output_imag = tf.nn.conv2d(xr, wi, strides, "SAME", data_format='NCHW') + tf.nn.conv2d(xi, wr, strides, "SAME", data_format='NCHW')
+            output_real = Conv2d(out_channel, padding='same', data_format='channel_first', kernel_initializer=wr)(xr)
+                        - Conv2d(out_channel, padding='same', data_format='channel_first', kernel_initializer=wi)(xi)
+            output_imag = Conv2d(out_channel, padding='same', data_format='channel_first', kernel_initializer=wi)(xr)
+                        + Conv2d(out_channel, padding='same', data_format='channel_first', kernel_initializer=wr)(xi)
             
-            dimension = output_real.get_shape().as_list()[-1]
-            b_real = tf.get_variable('biases_real', [dimension], initializer=tf.constant_initializer(0.0))
-            b_imag = tf.get_variable('biases_imag', [dimension], initializer=tf.constant_initializer(0.0))
+            #dimension = output_real.get_shape().as_list()[-1]
+            #b_real = tf.get_variable('biases_real', [dimension], initializer=tf.constant_initializer(0.0))
+            #b_imag = tf.get_variable('biases_imag', [dimension], initializer=tf.constant_initializer(0.0))
+        return output_real, output_imag
   
-        return tf.nn.bias_add(output_real,b_real), tf.nn.bias_add(output_imag,b_imag)
+        #return tf.nn.bias_add(output_real,b_real), tf.nn.bias_add(output_imag,b_imag)
     
     
     def com_full_layer(xr, xi, neurons,name="dense"):
         with tf.variable_scope(name):        
             sigma = 1/np.sqrt(np.prod(x.get_shape().as_list()[2:]))
             w_real, w_imag = w_init([xr.get_shape().as_list()[1],neurons], scale=sigma)
-            wr = tf.get_variable('w_real', initializer = w_real)
-            wi = tf.get_variable('w_imag', initializer = w_imag)
+            #wr = tf.get_variable('w_real', initializer = w_real)
+            #wi = tf.get_variable('w_imag', initializer = w_imag)
             
-            out_real = tf.matmul(xr,wr) - tf.matmul(xi,wi)
-            out_imag = tf.matmul(xi,wr) + tf.matmul(xr,wi)
+            out_real = subtract([dot([xr,wr]),dot([xi,wi])])
+            out_imag = add([dot([xr,wi]),dot(xi,wr)])
             
-            b_real = tf.get_variable('b_real', [neurons],initializer=tf.constant_initializer(0.0))
-            b_imag = tf.get_variable('b_imag', [neurons],initializer=tf.constant_initializer(0.0))
+            b_real = variable(value=np.zeros(out_real.get_shape()))
+            b_imag = variable(value=np.zeros(out_real.get_shape()))
             
   
-        return tf.nn.bias_add(out_real,b_real), tf.nn.bias_add(out_real,b_real)
+        return add([out_real,b_real]), add([out_imag,b_imag])
     
     def complex_BN(xr, xi, name='BN'):
         with tf.variable_scope(name):
             half_channel = x.get_shape()[1]
             
-            gamma_rr = tf.get_variable(name='gamma_rr',initializer=tf.convert_to_tensor(1/tf.sqrt(2.0)))
-            gamma_ii = tf.get_variable(name='gamma_ii',initializer=tf.convert_to_tensor(1/tf.sqrt(2.0)))
-            gamma_ri = tf.get_variable(name='gamma_ri',initializer=tf.convert_to_tensor(0.0))
+            gamma_rr = variable(value=np.full(shape=xr.get_shape(),fill_value=1/np.sqrt(2)))
+            gamma_ii = variable(value=np.full(shape=xr.get_shape(),fill_value=1/np.sqrt(2)))
+            gamma_ri = variable(value=np.zeros(shape=xr.get_shape()))
             
-            x_real = gamma_rr*xr+gamma_ri*xi
-            x_imag = gamma_ri*xr+gamma_ii*xi
+            x_real = add([multiply([gamma_rr,xr]),multiply([gamma_ri,xi])])
+            x_imag = add([multiply([gamma_ri,xr]),multiply([gamma_ii,xi])])
             
             dimension = x_real.get_shape().as_list()[-1]
-            b_real = tf.get_variable('bias_real',[dimension],initializer=tf.constant_initializer(0.0))
-            b_imag = tf.get_variable('bias_imag',[dimension],initializer=tf.constant_initializer(0.0))
+            b_real = variable(value=np.zeros(out_real.get_shape()))
+            b_imag = variable(value=np.zeros(out_real.get_shape()))
             
-            return tf.nn.bias_add(x_real,b_real), tf.nn.bias_add(x_imag,b_imag)
+            return add([x_real,b_real]), add([x_imag,b_imag])
     
     def add_common_layers(yr, yi, name='common_layer'):
         yr,yi = Lambda(complex_BN,arguments={'xi':yi, 'name':name})(yr)
