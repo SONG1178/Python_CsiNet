@@ -5,6 +5,7 @@ from tensorflow.keras.layers import Input, Dense, BatchNormalization, Reshape, C
 from tensorflow.keras.activations import sigmoid
 from tensorflow.keras.models import Model
 from tensorflow.keras.backend import variable
+from tensorflow.keras.initializers import RandomNormal
 from tensorflow.keras.callbacks import TensorBoard, Callback
 import scipy.io as sio 
 import numpy as np
@@ -58,8 +59,8 @@ def residual_network(x, residual_num, encoded_dim):
             
             
   
-            output_real = subtract([Conv2D(out_channel, kernel_size=(3,3),padding='same', data_format='channel_first', kernel_initializer=wr)(xr), Conv2D(out_channel, kernel_size=(3,3), padding='same', data_format='channel_first', kernel_initializer=wi)(xi)])
-            output_imag = add([Conv2D(out_channel, kernel_size=(3,3), padding='same', data_format='channel_first', kernel_initializer=wi)(xr), Conv2D(out_channel, kernel_size=(3,3), padding='same', data_format='channel_first', kernel_initializer=wr)(xi)])
+            output_real = subtract([Conv2D(out_channel, kernel_size=(3,3),padding='same', data_format='channel_first', kernel_initializer=RandomNormal(0.0,sigma))(xr), Conv2D(out_channel, kernel_size=(3,3), padding='same', data_format='channel_first', kernel_initializer=RandomNormal(0.0,sigma)(xi)])
+            output_imag = add([Conv2D(out_channel, kernel_size=(3,3), padding='same', data_format='channel_first', kernel_initializer=RandomNormal(0.0,sigma))(xr), Conv2D(out_channel, kernel_size=(3,3), padding='same', data_format='channel_first', kernel_initializer=RandomNormal(0.0,sigma)(xi)])
             
             #dimension = output_real.get_shape().as_list()[-1]
             #b_real = tf.get_variable('biases_real', [dimension], initializer=tf.constant_initializer(0.0))
