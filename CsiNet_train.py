@@ -124,16 +124,16 @@ def residual_network(x, residual_num, encoded_dim):
             yi = tf.expand_dims(y[:,1,:,:],1)
             
             #yr, yi = complex_conv(yr, yi, 4, 3,name='conv_1')
-            yr,yi = Lambda(complex_conv,arguments={'xi':yi,'out_channel':4,'filter_size':3,'name':'conv_1'})(yr)
+            yr,yi = complex_conv(yr, yi,4,3,'conv_1')
             yr, yi = add_common_layers(yr, yi, 'l_1')
         
             #yr, yi = complex_conv(yr, yi, 8, 3,name='conv_2')
-            yr,yi = Lambda(complex_conv,arguments={'xi':yi,'out_channel':8,'filter_size':3,'name':'conv_2'})(yr)
+            yr,yi = complex_conv(yr, yi,8,3,'conv_2')
             yr, yi = add_common_layers(yr, yi,'l_2')
         
             #yr, yi = complex_conv(yr, yi, 1, 3,name='conv_3')
-            yr,yi = Lambda(complex_conv,arguments={'xi':yi,'out_channel':1,'filter_size':3,'name':'conv_3'})(yr)
-            yr, yi = Lambda(complex_BN, arguments={'xi':yi})(yr)
+            yr,yi = complex_conv(yr, yi,1,3,'conv_3')
+            yr, yi = complex_BN(yr,yi)
             y = tf.keras.layers.concatenate([yr,yi], axis=1)
 
             y = add([shortcut, y])
@@ -151,9 +151,9 @@ def residual_network(x, residual_num, encoded_dim):
     
     xr = Reshape((img_total//2,))(xr)
     xi = Reshape((img_total//2,))(xi)
-    encoded_real, encoded_imag = Lambda(com_full_layer,arguments={'xi':xi,'neurons':encoded_dim,'name':'encoder'})(xr)
+    encoded_real, encoded_imag = com_full_layer(xr, xi,encoded_dim,'encoder')
     
-    xr, xi = Lambda(com_full_layer,arguments={'xi':encoded_imag,'neurons': img_total//2,'name':'decoder'})(encoded_real)
+    xr, xi = com_full_layer(encoded_real, encoded_imag, img_total//2,'decoder')
     xr = Reshape((img_channels//2, img_height, img_width,))(xr)
     xi = Reshape((img_channels//2, img_height, img_width,))(xi)
 
@@ -162,7 +162,7 @@ def residual_network(x, residual_num, encoded_dim):
     
     xr = tf.expand_dims(x[:,0,:,:],1)
     xi = tf.expand_dims(x[:,1,:,:],1)
-    xr,xi = Lambda(complex_conv,arguments={'xi':xi,'out_channel':1,'filter_size':3,'name':'output'})(xr)
+    xr,xi = complex_conv(xr, xi,1,3,'output')
     
 
     xr = sigmoid(xr)
