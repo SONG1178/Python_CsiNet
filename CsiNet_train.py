@@ -51,7 +51,7 @@ def residual_network(x, residual_num, encoded_dim):
             shape = [filter_size, filter_size, in_channel, out_channel]
             # create weight variable
             sigma = 1/m.sqrt(filter_size**2*(in_channel+out_channel))
-            w_real,w_imag = w_init(shape, scale=sigma)
+            wr,wi = w_init(shape, scale=sigma)
             #wr = tf.get_variable('w_real', initializer = w_real)
             #wi = tf.get_variable('w_imag', initializer = w_imag)
             # create bias variable
