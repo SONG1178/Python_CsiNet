@@ -119,8 +119,8 @@ def residual_network(x, residual_num, encoded_dim):
     def residual_block_decoded(y,name='residual_block'):
         with tf.variable_scope(name):
             shortcut = y
-            yr = tf.expand_dims(y[:,0,:,:],1)
-            yi = tf.expand_dims(y[:,1,:,:],1)
+            yr = Lambda(expand_dims)(y[:,0,:,:])
+            yi = Lambda(expand_dims)(y[:,1,:,:])
             
             #yr, yi = complex_conv(yr, yi, 4, 3,name='conv_1')
             yr,yi = complex_conv(yr, yi,4,3,'conv_1')
@@ -140,9 +140,14 @@ def residual_network(x, residual_num, encoded_dim):
 
         return y
     
+    def expand_dim(x):
+        x = tf.expand_dims(x,1)
+        return x 
+    
+    
     #x = Conv2D(2, (3, 3), padding='same', data_format="channels_first")(x)
-    x_real = tf.expand_dims(x[:,0,:,:],1)
-    x_imag = tf.expand_dims(x[:,1,:,:],1)
+    x_real = Lambda(expand_dims)(x[:,0,:,:])
+    x_imag = Lambda(expand_dims)(x[:,0,:,:])
     x_real,xi_imag = complex_conv(x_real, x_imag, 1, 3)
     #x_real, x_imag = complex_conv(x_real, x_imag, 1, 3)
     xr, xi = add_common_layers(x_real, x_imag,'l_in')
@@ -159,8 +164,8 @@ def residual_network(x, residual_num, encoded_dim):
     x = residual_block_decoded(x,name='first_decoder')
     x = residual_block_decoded(x,name='second_decoder')
     
-    xr = tf.expand_dims(x[:,0,:,:],1)
-    xi = tf.expand_dims(x[:,1,:,:],1)
+    xr = Lambda(expand_dims)(x[:,0,:,:])
+    xi = Lambda(expand_dims)(x[:,0,:,:])
     xr,xi = complex_conv(xr, xi,1,3,'output')
     
 
