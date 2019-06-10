@@ -140,7 +140,7 @@ def residual_network(x, residual_num, encoded_dim):
 
         return y
     
-    def expand_dim(x):
+    def expand_dims(x):
         x = tf.expand_dims(x,1)
         return x 
     
