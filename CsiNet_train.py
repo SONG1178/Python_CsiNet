@@ -101,7 +101,7 @@ def residual_network(x, residual_num, encoded_dim):
             return tf.nn.bias_add(x_real,b_real), tf.nn.bias_add(x_imag,b_imag)
     
     def add_common_layers(yr, yi, name='common_layer'):
-        yr,yi = Lambda(complex_BN,arguments={'xr':yr,'yr':yi, 'name':name})
+        yr,yi = Lambda(complex_BN,arguments={'xi':yi, 'name':name})(yr)
         yr = LeakyReLU()(yr)
         yi = LeakyReLU()(yi)
         return yr, yi
@@ -112,16 +112,16 @@ def residual_network(x, residual_num, encoded_dim):
             yi = tf.expand_dims(y[:,1,:,:],1)
             
             #yr, yi = complex_conv(yr, yi, 4, 3,name='conv_1')
-            yr,yi = Lambda(complex_conv,arguments={'xr':yr,'xi':yi,'out_channel':4,'filter_size':3,'name':'conv_1'})
+            yr,yi = Lambda(complex_conv,arguments={'xi':yi,'out_channel':4,'filter_size':3,'name':'conv_1'})(yr)
             yr, yi = add_common_layers(yr, yi, 'l_1')
         
             #yr, yi = complex_conv(yr, yi, 8, 3,name='conv_2')
-            yr,yi = Lambda(complex_conv,arguments={'xr':yr,'xi':yi,'out_channel':8,'filter_size':3,'name':'conv_2'})
+            yr,yi = Lambda(complex_conv,arguments={'xi':yi,'out_channel':8,'filter_size':3,'name':'conv_2'})(yr)
             yr, yi = add_common_layers(yr, yi,'l_2')
         
             #yr, yi = complex_conv(yr, yi, 1, 3,name='conv_3')
-            yr,yi = Lambda(complex_conv,arguments={'xr':yr,'xi':yi,'out_channel':1,'filter_size':3,'name':'conv_3'})
-            yr, yi = complex_BN(yr, yi)
+            yr,yi = Lambda(complex_conv,arguments={'xi':yi,'out_channel':1,'filter_size':3,'name':'conv_3'})(yr)
+            yr, yi = Lambda(complex_BN, arguments={'xi':yi)(yr)
             y = tf.keras.layers.concatenate([yr,yi], axis=1)
 
             y = add([shortcut, y])
@@ -139,9 +139,9 @@ def residual_network(x, residual_num, encoded_dim):
     
     xr = Reshape((img_total//2,))(xr)
     xi = Reshape((img_total//2,))(xi)
-    encoded_real, encoded_imag = Lambda(com_full_layer,arguments={'xr':xr,'xi':xi,'neurons':encoded_dim,'name':'encoder'})
+    encoded_real, encoded_imag = Lambda(com_full_layer,arguments={'xi':xi,'neurons':encoded_dim,'name':'encoder'})(xr)
     
-    xr, xi = Lambda(com_full_layer,arguments={'xr':encoded_real,'xi':encoded_imag,'neurons': img_total//2,'name':'decoder'})
+    xr, xi = Lambda(com_full_layer,arguments={'xi':encoded_imag,'neurons': img_total//2,'name':'decoder'})(encoded_real)
     xr = Reshape((img_channels//2, img_height, img_width,))(xr)
     xi = Reshape((img_channels//2, img_height, img_width,))(xi)
 
@@ -150,7 +150,7 @@ def residual_network(x, residual_num, encoded_dim):
     
     xr = tf.expand_dims(x[:,0,:,:],1)
     xi = tf.expand_dims(x[:,1,:,:],1)
-    xr,xi = Lambda(complex_conv,arguments={'xr':xr,'xi':xi,'out_channel':1,'filter_size':3,'name':'output'})
+    xr,xi = Lambda(complex_conv,arguments={'xi':xi,'out_channel':1,'filter_size':3,'name':'output'})(xr)
     
 
     xr = sigmoid(xr)
