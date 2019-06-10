@@ -92,12 +92,12 @@ def residual_network(x, residual_num, encoded_dim):
         with tf.variable_scope(name):
             half_channel = x.get_shape()[1]
             
-            gamma_rr = variable(value=np.full(shape=xr.get_shape(),fill_value=1/m.sqrt(2)))
-            gamma_ii = variable(value=np.full(shape=xr.get_shape(),fill_value=1/m.sqrt(2)))
-            gamma_ri = variable(value=np.zeros(shape=xr.get_shape()))
+            gamma_rr = variable(value=1/m.sqrt(2))
+            gamma_ii = variable(valuee=1/m.sqrt(2))
+            gamma_ri = variable(value=0.0)
             
-            x_real = add([multiply([gamma_rr,xr]),multiply([gamma_ri,xi])])
-            x_imag = add([multiply([gamma_ri,xr]),multiply([gamma_ii,xi])])
+            x_real = add([gamma_rr*xr,gamma_ri*xi])
+            x_imag = add([gamma_ri*xr,gamma_ii*xi])
             
             dimension = x_real.get_shape().as_list()[-1]
             b_real = variable(value=np.zeros(out_real.get_shape()))
