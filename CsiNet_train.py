@@ -121,7 +121,7 @@ def residual_network(x, residual_num, encoded_dim):
         
             #yr, yi = complex_conv(yr, yi, 1, 3,name='conv_3')
             yr,yi = Lambda(complex_conv,arguments={'xi':yi,'out_channel':1,'filter_size':3,'name':'conv_3'})(yr)
-            yr, yi = Lambda(complex_BN, arguments={'xi':yi)(yr)
+            yr, yi = Lambda(complex_BN, arguments={'xi':yi})(yr)
             y = tf.keras.layers.concatenate([yr,yi], axis=1)
 
             y = add([shortcut, y])
