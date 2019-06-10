@@ -50,7 +50,7 @@ def residual_network(x, residual_num, encoded_dim):
             # shape of the weight and bias
             shape = [filter_size, filter_size, in_channel, out_channel]
             # create weight variable
-            sigma = 1/np.sqrt(filter_size**2*(in_channel+out_channel))
+            sigma = 1/m.sqrt(filter_size**2*(in_channel+out_channel))
             w_real,w_imag = w_init(shape, scale=sigma)
             #wr = tf.get_variable('w_real', initializer = w_real)
             #wi = tf.get_variable('w_imag', initializer = w_imag)
@@ -71,7 +71,7 @@ def residual_network(x, residual_num, encoded_dim):
     
     def com_full_layer(xr, xi, neurons,name="dense"):
         with tf.variable_scope(name):        
-            sigma = 1/np.sqrt(np.prod(x.get_shape().as_list()[2:]))
+            sigma = 1/m.sqrt(np.prod(x.get_shape().as_list()[2:]))
             w_real, w_imag = w_init([xr.get_shape().as_list()[1],neurons], scale=sigma)
             #wr = tf.get_variable('w_real', initializer = w_real)
             #wi = tf.get_variable('w_imag', initializer = w_imag)
@@ -89,8 +89,8 @@ def residual_network(x, residual_num, encoded_dim):
         with tf.variable_scope(name):
             half_channel = x.get_shape()[1]
             
-            gamma_rr = variable(value=np.full(shape=xr.get_shape(),fill_value=1/np.sqrt(2)))
-            gamma_ii = variable(value=np.full(shape=xr.get_shape(),fill_value=1/np.sqrt(2)))
+            gamma_rr = variable(value=np.full(shape=xr.get_shape(),fill_value=1/m.sqrt(2)))
+            gamma_ii = variable(value=np.full(shape=xr.get_shape(),fill_value=1/m.sqrt(2)))
             gamma_ri = variable(value=np.zeros(shape=xr.get_shape()))
             
             x_real = add([multiply([gamma_rr,xr]),multiply([gamma_ri,xi])])
