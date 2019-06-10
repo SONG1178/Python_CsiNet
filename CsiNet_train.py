@@ -75,16 +75,19 @@ def residual_network(x, residual_num, encoded_dim):
     def com_full_layer(xr, xi, neurons,name="dense"):
         with tf.variable_scope(name):        
             sigma = 1/m.sqrt(np.prod(x.get_shape().as_list()[2:]))
-            w_real, w_imag = w_init([xr.get_shape().as_list()[1],neurons], scale=sigma)
+            wr, wr = w_init([xr.get_shape().as_list()[1],neurons], scale=sigma)
             #wr = tf.get_variable('w_real', initializer = w_real)
             #wi = tf.get_variable('w_imag', initializer = w_imag)
             
             out_real = subtract([dot([xr,wr]),dot([xi,wi])])
             out_imag = add([dot([xr,wi]),dot(xi,wr)])
             
-            b_real = zeros(out_real.get_shape())
-            b_imag = zeros(out_real.get_shape())
+            channel,width,height = out_real.get_shape()[1:]
+            batch_size = 200
+            shape = [batch_size,channel,width,height]
             
+            b_real = zeros(shape)
+            b_imag = zeros(shape)
   
         return add([out_real,b_real]), add([out_imag,b_imag])
     
