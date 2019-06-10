@@ -59,8 +59,10 @@ def residual_network(x, residual_num, encoded_dim):
             
             
   
-            output_real = subtract([Conv2D(out_channel, kernel_size=(3,3),padding='same', data_format='channel_first', kernel_initializer=RandomNormal(0.0,sigma))(xr), Conv2D(out_channel, kernel_size=(3,3), padding='same', data_format='channel_first', kernel_initializer=RandomNormal(0.0,sigma)(xi)])
-            output_imag = add([Conv2D(out_channel, kernel_size=(3,3), padding='same', data_format='channel_first', kernel_initializer=RandomNormal(0.0,sigma))(xr), Conv2D(out_channel, kernel_size=(3,3), padding='same', data_format='channel_first', kernel_initializer=RandomNormal(0.0,sigma)(xi)])
+            output_real = subtract([Conv2D(out_channel, kernel_size=(3,3),padding='same', data_format='channels_first', kernel_initializer=RandomNormal(0.0,sigma))(xr), 
+                                    Conv2D(out_channel, kernel_size=(3,3), padding='same', data_format='channels_first', kernel_initializer=RandomNormal(0.0,sigma)(xi)])
+            output_imag = add([Conv2D(out_channel, kernel_size=(3,3), padding='same', data_format='channels_first', kernel_initializer=RandomNormal(0.0,sigma))(xr), 
+                               Conv2D(out_channel, kernel_size=(3,3), padding='same', data_format='channels_first', kernel_initializer=RandomNormal(0.0,sigma)(xi)])
             
             #dimension = output_real.get_shape().as_list()[-1]
             #b_real = tf.get_variable('biases_real', [dimension], initializer=tf.constant_initializer(0.0))
