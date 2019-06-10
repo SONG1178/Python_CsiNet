@@ -79,8 +79,8 @@ def residual_network(x, residual_num, encoded_dim):
             #wr = tf.get_variable('w_real', initializer = w_real)
             #wi = tf.get_variable('w_imag', initializer = w_imag)
             
-            out_real = subtract([dot([xr,wr]),dot([xi,wi])])
-            out_imag = add([dot([xr,wi]),dot(xi,wr)])
+            out_real = subtract([dot(xr,wr),dot(xi,wi)])
+            out_imag = add([dot(xr,wi),dot(xi,wr)])
             
             channel,width,height = out_real.get_shape()[1:]
             batch_size = 200
