@@ -7,7 +7,7 @@ from keras.layers.recurrent import Recurrent
 from keras.utils import conv_utils
 from keras.models import Model
 import numpy as np
-from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
+#from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
 from fft import fft, ifft, fft2, ifft2
 from bn import ComplexBN as complex_normalization
 from bn import sqrt_init
