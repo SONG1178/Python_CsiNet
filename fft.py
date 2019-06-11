@@ -133,16 +133,16 @@ if __name__ == "__main__":
 		R   = np.concatenate([R, np.conj(R[1:-1][::-1])])
 		I   = np.concatenate([I, np.conj(I[1:-1][::-1])])
 	Y   = R+I*1j
-	print np.allclose(X, Y)
+	print(np.allclose(X, Y))
 	
 	
 	# Theano
 	z   = TT.dmatrix()
 	f   = T.function([z], ifft(fft(z)))
 	v   = np.concatenate([np.real(x)[np.newaxis,:], np.imag(x)[np.newaxis,:]], axis=0)
-	print v
-	print f(v)
-	print np.allclose(v, f(v))
+	print(v)
+	print(f(v))
+	print(np.allclose(v, f(v)))
 	
 	
 	# Keras
