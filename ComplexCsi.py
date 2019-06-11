@@ -10,7 +10,7 @@ from ComplexConv import ComplexConv2D
 from bn import ComplexBatchNormalization as ComplexBN
 from dense import ComplexDense
 
-tf.reset_default_graph()
+#tf.reset_default_graph()
 
 envir = 'indoor' #'indoor' or 'outdoor'
 # image params
