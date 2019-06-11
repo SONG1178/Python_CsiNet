@@ -76,6 +76,8 @@ def residual_network(x, residual_num, encoded_dim):
         with tf.variable_scope(name):        
             sigma = 1/m.sqrt(np.prod(x.get_shape().as_list()[2:]))
             wr, wi = Lambda(w_init,arguments={'scale':sigma})([xr.get_shape().as_list()[1],neurons])
+            wr = variable(value=wr)
+            wi = variable(value=wi)
             #wr = tf.get_variable('w_real', initializer = w_real)
             #wi = tf.get_variable('w_imag', initializer = w_imag)
             
