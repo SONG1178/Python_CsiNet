@@ -44,7 +44,7 @@ def residual_network(x, residual_num, encoded_dim):
 
         return y
     
-    x = ComplexConv2D(2, (3, 3), padding='same', data_format="channels_first")(x)
+    x = ComplexConv2D(1, (3, 3), padding='same', data_format="channels_first")(x)
     x = add_common_layers(x)
     
     
@@ -56,7 +56,7 @@ def residual_network(x, residual_num, encoded_dim):
     for i in range(residual_num):
         x = residual_block_decoded(x)
     
-    x = ComplexConv2D(2, (3, 3), activation='sigmoid', padding='same', data_format="channels_first")(x)
+    x = ComplexConv2D(1, (3, 3), activation='sigmoid', padding='same', data_format="channels_first")(x)
 
     return x
 
