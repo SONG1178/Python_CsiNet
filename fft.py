@@ -162,4 +162,4 @@ if __name__ == "__main__":
 	#print v
 	V = model.predict(v)
 	#print V
-print V.shape
+print(V.shape)
