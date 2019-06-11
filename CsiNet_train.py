@@ -144,8 +144,8 @@ def residual_network(x, residual_num, encoded_dim):
         x = tf.expand_dims(x,1)
         return x 
     
-    def concat(x,y,axis=1):
-        return tf.keras.layers.Concatenate([x,y],axis=axis)
+    def concat(x,y):
+        return tf.keras.layers.Concatenate([x,y],axis=1)
     
     #x = Conv2D(2, (3, 3), padding='same', data_format="channels_first")(x)
     x_real = Lambda(expand_dims)(x[:,0,:,:])
