@@ -133,7 +133,7 @@ def residual_network(x, residual_num, encoded_dim):
             #yr, yi = complex_conv(yr, yi, 1, 3,name='conv_3')
             yr,yi = Lambda(complex_conv,arguments={'xi': yi,'out_channel':1,'filter_size':3,'name':'conv_3'})(yr)
             yr, yi = Lambda(complex_BN,arguments={'xi':yi})(yr)
-            y = Lambda(concat,arguments={'y':yi,'axis':1})(yr)
+            y = Lambda(concat,arguments={'y':yi})(yr)
 
             y = add([shortcut, y])
             y = LeakyReLU()(y)
@@ -174,7 +174,7 @@ def residual_network(x, residual_num, encoded_dim):
     xr = sigmoid(xr)
     xi = sigmoid(xi)
 
-    x = Lambda(concat,arguments={'y':xi, 'axis':1})(xr)
+    x = Lambda(concat,arguments={'y':xi})(xr)
     
 
     return x
