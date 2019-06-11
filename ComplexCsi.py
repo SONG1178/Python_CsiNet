@@ -6,6 +6,9 @@ import scipy.io as sio
 import numpy as np
 import math
 import time
+from ComplexConv import ComplexConv2D
+from bn import ComplexBN, ComplexDense, GetReal
+
 tf.reset_default_graph()
 
 envir = 'indoor' #'indoor' or 'outdoor'
