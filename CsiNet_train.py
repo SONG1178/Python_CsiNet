@@ -133,7 +133,7 @@ def residual_network(x, residual_num, encoded_dim):
             #yr, yi = complex_conv(yr, yi, 1, 3,name='conv_3')
             yr,yi = Lambda(complex_conv,arguments={'xi': yi,'out_channel':1,'filter_size':3,'name':'conv_3'})(yr)
             yr, yi = Lambda(complex_BN,arguments={'xi':yi})(yr)
-            y = tf.keras.layers.concatenate([yr,yi], axis=1)
+            y = Lambda(concat,arguments={'y':yi,'axis':1)(yr)
 
             y = add([shortcut, y])
             y = LeakyReLU()(y)
@@ -144,6 +144,8 @@ def residual_network(x, residual_num, encoded_dim):
         x = tf.expand_dims(x,1)
         return x 
     
+    def concat(x,y,axis=1):
+        return tf.keras.layers.Concatenate([x,y],axis=axis)
     
     #x = Conv2D(2, (3, 3), padding='same', data_format="channels_first")(x)
     x_real = Lambda(expand_dims)(x[:,0,:,:])
@@ -172,7 +174,7 @@ def residual_network(x, residual_num, encoded_dim):
     xr = sigmoid(xr)
     xi = sigmoid(xi)
 
-    x = tf.keras.layers.concatenate([xr,xi], axis=1)
+    x = Lambda(concat,arguments={'y':xi, 'axis':1)(xr)
     
 
     return x
