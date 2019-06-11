@@ -258,4 +258,4 @@ class ComplexLayerNorm(Layer):
             'gamma_off_constraint': constraints.serialize(self.gamma_off_constraint),
         }
         base_config = super(ComplexLayerNorm, self).get_config()
-return dict(list(base_config.items()) + list(config.items()))
+    return dict(list(base_config.items()) + list(config.items()))
