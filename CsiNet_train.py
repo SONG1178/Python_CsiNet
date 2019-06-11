@@ -2,7 +2,7 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 from tensorflow.python.keras.layers import Lambda
 from tensorflow.keras.layers import Input, Dense, BatchNormalization, Reshape, Conv2D, add, LeakyReLU,multiply, subtract
-from tensorflow.keras.activations import sigmoid
+from tensorflow.keras.layers.activations import sigmoid
 from tensorflow.keras.models import Model
 from tensorflow.keras.backend import variable, zeros, bias_add, dot
 from tensorflow.keras.initializers import RandomNormal
