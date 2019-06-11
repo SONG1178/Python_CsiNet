@@ -44,7 +44,6 @@ def residual_network(x, residual_num, encoded_dim):
         return w_real, w_imag
     
     def complex_conv(xr, xi, out_channel, filter_size, stride=1,name="conv"):
-        with tf.variable_scope(name):
             # number of channel in the input x
             #in_channel = xr.get_shape().as_list()[1] #get_shape returns a tuple and needed to be converted to a list
             # shape of the weight and bias
@@ -55,13 +54,13 @@ def residual_network(x, residual_num, encoded_dim):
             #wr = tf.get_variable('w_real', initializer = w_real)
             #wi = tf.get_variable('w_imag', initializer = w_imag)
             # create bias variable
-            in_channel = x.get_shape().as_list()[1]
-            sigma = constant(1/np.sqrt(filter_size**2*(in_channel+out_channel)))
+        in_channel = x.get_shape().as_list()[1]
+        sigma = constant(1/np.sqrt(filter_size**2*(in_channel+out_channel)))
   
-            output_real = subtract([Conv2D(out_channel, kernel_size=(3,3),padding='same', data_format='channels_first', kernel_initializer=RandomNormal(0.0,sigma))(xr), 
-                                    Conv2D(out_channel, kernel_size=(3,3), padding='same', data_format='channels_first', kernel_initializer=RandomNormal(0.0,sigma))(xi)])
-            output_imag = add([Conv2D(out_channel, kernel_size=(3,3), padding='same', data_format='channels_first', kernel_initializer=RandomNormal(0.0,sigma))(xr), 
-                               Conv2D(out_channel, kernel_size=(3,3), padding='same', data_format='channels_first', kernel_initializer=RandomNormal(0.0,sigma))(xi)])
+        output_real = subtract([Conv2D(out_channel, kernel_size=(3,3),padding='same', data_format='channels_first', kernel_initializer=RandomNormal(0.0,sigma))(xr), 
+                                Conv2D(out_channel, kernel_size=(3,3), padding='same', data_format='channels_first', kernel_initializer=RandomNormal(0.0,sigma))(xi)])
+        output_imag = add([Conv2D(out_channel, kernel_size=(3,3), padding='same', data_format='channels_first', kernel_initializer=RandomNormal(0.0,sigma))(xr), 
+                           Conv2D(out_channel, kernel_size=(3,3), padding='same', data_format='channels_first', kernel_initializer=RandomNormal(0.0,sigma))(xi)])
             
             #dimension = output_real.get_shape().as_list()[-1]
             #b_real = tf.get_variable('biases_real', [dimension], initializer=tf.constant_initializer(0.0))
@@ -71,43 +70,38 @@ def residual_network(x, residual_num, encoded_dim):
         #return tf.nn.bias_add(output_real,b_real), tf.nn.bias_add(output_imag,b_imag)
     
     
-    def com_full_layer(xr, xi, neurons,name="dense"):
-        with tf.variable_scope(name):        
-            wr, wi = Lambda(w_init,arguments={'scale':1/m.sqrt(np.prod(x.get_shape().as_list()[2:]))})([xr.get_shape().as_list()[1],neurons])
-            wr = variable(value=wr)
-            wi = variable(value=wi)
+    def com_full_layer(xr, xi, neurons,name="dense"):       
+        wr, wi = Lambda(w_init,arguments={'scale':1/m.sqrt(np.prod(x.get_shape().as_list()[2:]))})([xr.get_shape().as_list()[1],neurons])
+        wr = variable(value=wr)
+        wi = variable(value=wi)
             #wr = tf.get_variable('w_real', initializer = w_real)
             #wi = tf.get_variable('w_imag', initializer = w_imag)
             
-            out_real = subtract([dot(xr,wr),dot(xi,wi)])
-            out_imag = add([dot(xr,wi),dot(xi,wr)])
+        out_real = subtract([dot(xr,wr),dot(xi,wi)])
+        out_imag = add([dot(xr,wi),dot(xi,wr)])
             
             
-            b_real = zeros([200,neurons])
-            b_imag = zeros([200,neurons])
+        b_real = zeros([200,neurons])
+        b_imag = zeros([200,neurons])
   
         return add([out_real,b_real]), add([out_imag,b_imag])
     
     def complex_BN(xr, xi, name='BN'):
-        with tf.variable_scope(name):
-            half_channel = x.get_shape()[1]
+        gamma_rr = variable(value=1/m.sqrt(2))
+        gamma_ii = variable(value=1/m.sqrt(2))
+        gamma_ri = variable(value=0.0)
             
-            gamma_rr = variable(value=1/m.sqrt(2))
-            gamma_ii = variable(value=1/m.sqrt(2))
-            gamma_ri = variable(value=0.0)
+        x_real = add([gamma_rr*xr,gamma_ri*xi])
+        x_imag = add([gamma_ri*xr,gamma_ii*xi])
             
-            x_real = add([gamma_rr*xr,gamma_ri*xi])
-            x_imag = add([gamma_ri*xr,gamma_ii*xi])
+        channel,width,height = x_real.get_shape().as_list()[1:]
+        batch_size = constant(200)
+        shape = [batch_size,channel,width,height]
             
-            channel,width,height = x_real.get_shape().as_list()[1:]
-            batch_size = constant(200)
-            shape = [batch_size,channel,width,height]
+        b_real = zeros(shape)
+        b_imag = zeros(shape)
             
-            dimension = x_real.get_shape().as_list()[-1]
-            b_real = zeros(shape)
-            b_imag = zeros(shape)
-            
-            return add([x_real,b_real]), add([x_imag,b_imag])
+        return add([x_real,b_real]), add([x_imag,b_imag])
     
     def add_common_layers(yr, yi, name='common_layer'):
         yr,yi = Lambda(complex_BN,arguments={'xi':yi,'name': name})(yr)
@@ -115,26 +109,25 @@ def residual_network(x, residual_num, encoded_dim):
         yi = LeakyReLU()(yi)
         return yr, yi
     def residual_block_decoded(y,name='residual_block'):
-        with tf.variable_scope(name):
-            shortcut = y
-            yr = Lambda(expand_dims)(y[:,0,:,:])
-            yi = Lambda(expand_dims)(y[:,1,:,:])
+        shortcut = y
+        yr = Lambda(expand_dims)(y[:,0,:,:])
+        yi = Lambda(expand_dims)(y[:,1,:,:])
             
             #yr, yi = complex_conv(yr, yi, 4, 3,name='conv_1')
-            yr,yi = Lambda(complex_conv,arguments={'xi': yi,'out_channel':4,'filter_size':3,'name':'conv_1'})(yr)
-            yr, yi = add_common_layers(yr, yi, 'l_1')
+        yr,yi = Lambda(complex_conv,arguments={'xi': yi,'out_channel':4,'filter_size':3,'name':'conv_1'})(yr)
+        yr, yi = add_common_layers(yr, yi, 'l_1')
         
             #yr, yi = complex_conv(yr, yi, 8, 3,name='conv_2')
-            yr,yi = Lambda(complex_conv,arguments={'xi': yi,'out_channel':8,'filter_size':3,'name':'conv_2'})(yr)
-            yr, yi = add_common_layers(yr, yi,'l_2')
+        yr,yi = Lambda(complex_conv,arguments={'xi': yi,'out_channel':8,'filter_size':3,'name':'conv_2'})(yr)
+        yr, yi = add_common_layers(yr, yi,'l_2')
         
             #yr, yi = complex_conv(yr, yi, 1, 3,name='conv_3')
-            yr,yi = Lambda(complex_conv,arguments={'xi': yi,'out_channel':1,'filter_size':3,'name':'conv_3'})(yr)
-            yr, yi = Lambda(complex_BN,arguments={'xi':yi})(yr)
-            y = Lambda(concat,arguments={'y':yi})(yr)
+        yr,yi = Lambda(complex_conv,arguments={'xi': yi,'out_channel':1,'filter_size':3,'name':'conv_3'})(yr)
+        yr, yi = Lambda(complex_BN,arguments={'xi':yi})(yr)
+        y = Lambda(concat,arguments={'y':yi})(yr)
 
-            y = add([shortcut, y])
-            y = LeakyReLU()(y)
+        y = add([shortcut, y])
+        y = LeakyReLU()(y)
 
         return y
     
