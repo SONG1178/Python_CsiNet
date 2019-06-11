@@ -51,7 +51,7 @@ def residual_network(x, residual_num, encoded_dim):
     x = Reshape((img_total,))(x)
     encoded = ComplexDense(encoded_dim, activation='linear')(x)
     
-    x = ComplexDense(img_total, activation='linear')(encoded)
+    x = ComplexDense(img_total//2, activation='linear')(encoded)
     x = Reshape((img_channels, img_height, img_width,))(x)
     for i in range(residual_num):
         x = residual_block_decoded(x)
