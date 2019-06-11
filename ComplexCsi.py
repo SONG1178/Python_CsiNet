@@ -7,7 +7,7 @@ import numpy as np
 import math
 import time
 from ComplexConv import ComplexConv2D
-from bn import ComplexBN
+from bn import ComplexBatchNormalization as ComplexBN
 from dense import ComplexDense
 
 tf.reset_default_graph()
