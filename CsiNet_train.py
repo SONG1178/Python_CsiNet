@@ -112,7 +112,7 @@ def residual_network(x, residual_num, encoded_dim):
             return add([x_real,b_real]), add([x_imag,b_imag])
     
     def add_common_layers(yr, yi, name='common_layer'):
-        yr,yi = Lambdda(complex_BN,arguments={'xi':yi,'name': name})(yr)
+        yr,yi = Lambda(complex_BN,arguments={'xi':yi,'name': name})(yr)
         yr = LeakyReLU()(yr)
         yi = LeakyReLU()(yi)
         return yr, yi
