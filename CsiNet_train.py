@@ -166,7 +166,7 @@ def residual_network(x, residual_num, encoded_dim):
     
     xr = Lambda(expand_dims)(x[:,0,:,:])
     xi = Lambda(expand_dims)(x[:,0,:,:])
-    xr,xi = Lambda(complex_conv,arguments:{'xi': xi,'out_channel':1,'filter_size':3,'name':'output'})(xr)
+    xr,xi = Lambda(complex_conv,arguments={'xi': xi,'out_channel':1,'filter_size':3,'name':'output'})(xr)
     
 
     xr = sigmoid(xr)
