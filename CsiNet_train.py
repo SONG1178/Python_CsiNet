@@ -4,7 +4,7 @@ from tensorflow.python.keras.layers import Lambda
 from tensorflow.keras.layers import Input, Dense, BatchNormalization, Reshape, Conv2D, add, LeakyReLU,multiply, subtract
 from tensorflow.keras.activations import sigmoid
 from tensorflow.keras.models import Model
-from tensorflow.keras.backend import variable, zeros, bias_add, dot
+from tensorflow.keras.backend import variable, zeros, bias_add, dot, constant
 from tensorflow.keras.initializers import RandomNormal
 from tensorflow.keras.callbacks import TensorBoard, Callback
 import scipy.io as sio 
@@ -33,9 +33,8 @@ def residual_network(x, residual_num, encoded_dim):
         # first half of the weight is the real part and the second part is the imaginary part
         # original input shape [batch_size, height, width, depth]
         # new input shape [part, batch_size, height, width, depth] where part is used to distinguish real and imaginary part
-        pi = m.pi
         magnitude =np.random.rayleigh(scale=scale, size=shape)
-        phase = np.random.uniform(low=-pi, high=pi, size=shape)
+        phase = np.random.uniform(low=-m.pi, high=m.pi, size=shape)
         #initial is the initial weights, part=0 refers to the real part, part=1 refers to the imaginary part   
         out_real = np.multiply(magnitude, np.cos(phase))
         out_imag = np.multiply(magnitude, np.sin(phase))
@@ -56,8 +55,8 @@ def residual_network(x, residual_num, encoded_dim):
             #wr = tf.get_variable('w_real', initializer = w_real)
             #wi = tf.get_variable('w_imag', initializer = w_imag)
             # create bias variable
-            
-            
+            in_channel = x.get_shape().as_list()[1]
+            sigma = constant(1/np.sqrt(filter_size**2*(in_channel+out_channel)))
   
             output_real = subtract([Conv2D(out_channel, kernel_size=(3,3),padding='same', data_format='channels_first', kernel_initializer=RandomNormal(0.0,sigma))(xr), 
                                     Conv2D(out_channel, kernel_size=(3,3), padding='same', data_format='channels_first', kernel_initializer=RandomNormal(0.0,sigma))(xi)])
@@ -74,7 +73,7 @@ def residual_network(x, residual_num, encoded_dim):
     
     def com_full_layer(xr, xi, neurons,name="dense"):
         with tf.variable_scope(name):        
-            sigma = 1/m.sqrt(np.prod(x.get_shape().as_list()[2:]))
+            sigma = constant(1/m.sqrt(np.prod(x.get_shape().as_list()[2:])))
             wr, wi = Lambda(w_init,arguments={'scale':sigma})([xr.get_shape().as_list()[1],neurons])
             wr = variable(value=wr)
             wi = variable(value=wi)
@@ -84,11 +83,9 @@ def residual_network(x, residual_num, encoded_dim):
             out_real = subtract([dot(xr,wr),dot(xi,wi)])
             out_imag = add([dot(xr,wi),dot(xi,wr)])
             
-            batch_size = 200
-            shape = [batch_size,neurons]
             
-            b_real = zeros(shape)
-            b_imag = zeros(shape)
+            b_real = zeros([200,neurons])
+            b_imag = zeros([200,neurons])
   
         return add([out_real,b_real]), add([out_imag,b_imag])
     
@@ -104,7 +101,7 @@ def residual_network(x, residual_num, encoded_dim):
             x_imag = add([gamma_ri*xr,gamma_ii*xi])
             
             channel,width,height = x_real.get_shape().as_list()[1:]
-            batch_size = 200
+            batch_size = constant(200)
             shape = [batch_size,channel,width,height]
             
             dimension = x_real.get_shape().as_list()[-1]
