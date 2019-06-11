@@ -149,8 +149,6 @@ def residual_network(x, residual_num, encoded_dim):
     def concat(x,y):
         return tf.keras.layers.concatenate([x,y],axis=1)
     
-    def sig(x):
-        return sigmoid(x)
     
     #x = Conv2D(2, (3, 3), padding='same', data_format="channels_first")(x)
     x_real = Lambda(expand_dims)(x[:,0,:,:])
@@ -176,9 +174,8 @@ def residual_network(x, residual_num, encoded_dim):
     xr,xi = Lambda(complex_conv,arguments={'xi': xi,'out_channel':1,'filter_size':3,'name':'output'})(xr)
     
 
-    xr = Lambda(sig)(xr)
-    xi = Lambda(sig)(xi)
-
+    xr = sigmoid(xr)
+    xi = sigmoid(xi)
     x = Lambda(concat,arguments={'y':xi})(xr)
     
 
