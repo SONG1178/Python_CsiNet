@@ -33,10 +33,10 @@ def residual_network(x, residual_num, encoded_dim):
         y = ComplexConv2D(4, kernel_size=(3, 3), padding='same', data_format='channels_first')(y)
         y = add_common_layers(y)
         
-        y = Conv2D(8, kernel_size=(3, 3), padding='same', data_format='channels_first')(y)
+        y = ComplexConv2D(8, kernel_size=(3, 3), padding='same', data_format='channels_first')(y)
         y = add_common_layers(y)
         
-        y = Conv2D(1, kernel_size=(3, 3), padding='same', data_format='channels_first')(y)
+        y = ComplexConv2D(1, kernel_size=(3, 3), padding='same', data_format='channels_first')(y)
         y = ComplexBN()(y)
 
         y = add([shortcut, y])
