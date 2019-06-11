@@ -7,7 +7,8 @@ import numpy as np
 import math
 import time
 from ComplexConv import ComplexConv2D
-from bn import ComplexBN, ComplexDense, GetReal
+from bn import ComplexBN
+from dense import ComplexDense
 
 tf.reset_default_graph()
 
@@ -24,38 +25,38 @@ encoded_dim = 512  #compress rate=1/4->dim.=512, compress rate=1/16->dim.=128, c
 # Bulid the autoencoder model of CsiNet
 def residual_network(x, residual_num, encoded_dim):
     def add_common_layers(y):
-        y = BatchNormalization()(y)
+        y = ComplexBN()(y)
         y = LeakyReLU()(y)
         return y
     def residual_block_decoded(y):
         shortcut = y
+        y = ComplexConv2D(4, kernel_size=(3, 3), padding='same', data_format='channels_first')(y)
+        y = add_common_layers(y)
+        
         y = Conv2D(8, kernel_size=(3, 3), padding='same', data_format='channels_first')(y)
         y = add_common_layers(y)
         
-        y = Conv2D(16, kernel_size=(3, 3), padding='same', data_format='channels_first')(y)
-        y = add_common_layers(y)
-        
-        y = Conv2D(2, kernel_size=(3, 3), padding='same', data_format='channels_first')(y)
-        y = BatchNormalization()(y)
+        y = Conv2D(1, kernel_size=(3, 3), padding='same', data_format='channels_first')(y)
+        y = ComplexBN()(y)
 
         y = add([shortcut, y])
         y = LeakyReLU()(y)
 
         return y
     
-    x = Conv2D(2, (3, 3), padding='same', data_format="channels_first")(x)
+    x = ComplexConv2D(2, (3, 3), padding='same', data_format="channels_first")(x)
     x = add_common_layers(x)
     
     
     x = Reshape((img_total,))(x)
-    encoded = Dense(encoded_dim, activation='linear')(x)
+    encoded = ComplexDense(encoded_dim, activation='linear')(x)
     
-    x = Dense(img_total, activation='linear')(encoded)
+    x = ComplexDense(img_total, activation='linear')(encoded)
     x = Reshape((img_channels, img_height, img_width,))(x)
     for i in range(residual_num):
         x = residual_block_decoded(x)
     
-    x = Conv2D(2, (3, 3), activation='sigmoid', padding='same', data_format="channels_first")(x)
+    x = ComplexConv2D(2, (3, 3), activation='sigmoid', padding='same', data_format="channels_first")(x)
 
     return x
 
