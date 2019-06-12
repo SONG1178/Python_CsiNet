@@ -107,7 +107,7 @@ file = 'CsiNet_'+(envir)+'_dim'+str(encoded_dim)+time.strftime('_%m_%d')
 path = 'result/TensorBoard_%s' %file
 
 autoencoder.fit(x_train, x_train,
-                epochs=1000,
+                epochs=10,
                 batch_size=200,
                 shuffle=True,
                 validation_data=(x_val, x_val),
